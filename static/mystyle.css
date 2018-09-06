@@ -1,0 +1,27 @@
+
+#login-form {
+    margin-top: 70px;
+}
+
+.error {
+    color: red;
+}
+
+/*验证码图片的样式*/
+
+#v-code-wrapper {
+    position: relative;
+}
+
+#v-code {
+    width: 50%;
+    height: 34px;
+    position: absolute;
+    right: 0;
+    top: 24px
+}
+
+#v-code-input {
+    width: 30%;
+}
+

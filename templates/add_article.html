@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>添加文章</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="/static/bootstrap-3.3.7/css/bootstrap.min.css">
+</head>
+<body>
+<div class="container">
+    <div class="row">
+        <div style="margin-top: 50px">
+            <a href="/backend/" class="btn btn-primary pull-right" style="margin-bottom: 20px">返回</a>
+            <hr style="clear: both">
+            <form method="post" novalidate autocomplete="off" action="/add_article/">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="article-title">标题</label>
+                    <input type="text" name="title" class="form-control" id="article-title" placeholder="标题">
+                </div>
+                <div class="form-group">
+                    <label for="article-content">内容</label>
+                    <textarea name="content" class="form-control" id="article-content" cols="30" rows="10"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">提交</button>
+            </form>
+        </div>
+
+    </div>
+</div>
+<script src="/static/jquery-3.3.1.min.js"></script>
+<script charset="utf-8" src="/static/kindeditor/kindeditor-all-min.js"></script>
+<script charset="utf-8" src="/static/kindeditor/lang/zh-CN.js"></script>
+<script>
+    KindEditor.ready(function (K) {
+        window.editor = K.create('#article-content', {
+            width: '970px',  // 宽
+            height: '500px',  // 高
+            uploadJson: '/upload_img/',  // 上传文件的URL
+            extraFileUploadParams: {csrfmiddlewaretoken: $("[name='csrfmiddlewaretoken']").val()}  // 给上传文件添加csrftoken
+        });
+    });
+</script>
+</body>
+</html>

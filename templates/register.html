@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>欢迎注册</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="/static/bootstrap-3.3.7/css/bootstrap.min.css">
+</head>
+<body style="background-color:#fdffee">
+<div class="container">
+    <div class="row">
+        <div class="col-md-8 col-md-offset-2" style="margin-top: 55px">
+            <div class="panel panel-info">
+                <div class="panel-heading ">
+                    <h3 class="panel-title ">注册
+                        <span class="glyphicon glyphicon-pushpin pull-right" aria-hidden="true"></span>
+                    </h3>
+                </div>
+                <div class="panel-body">
+                    <form class="form-horizontal" novalidate autocomplete="off">
+                        <div class="form-group">
+                            <label for="{{ form_obj.username.id_for_label }}"
+                                   class="col-sm-3 control-label">{{ form_obj.username.label }}</label>
+                            <div class="col-sm-6">
+                                {{ form_obj.username }}
+                                <span class="help-block"></span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="{{ form_obj.password.id_for_label }}"
+                                   class="col-sm-3 control-label">{{ form_obj.password.label }}</label>
+                            <div class="col-sm-6">
+                                {{ form_obj.password }}
+                                <span class="help-block"></span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="{{ form_obj.re_password.id_for_label }}"
+                                   class="col-sm-3 control-label">{{ form_obj.re_password.label }}</label>
+                            <div class="col-sm-6">
+                                {{ form_obj.re_password }}
+                                <span class="help-block"></span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="{{ form_obj.phone.id_for_label }}"
+                                   class="col-sm-3 control-label">{{ form_obj.phone.label }}</label>
+                            <div class="col-sm-6">
+                                {{ form_obj.phone }}
+                                <span class="help-block"></span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-9 col-sm-offset-3">上传头像</label>
+                            <div class="col-sm-9 col-sm-offset-3">
+                                <input type="file" id="id_avatar" class="hide" name="avatar" accept="image/*">
+                                <label for="id_avatar"><img src="/static/img/default.png" id="show_avatar" style="width: 100px;"></label>
+                            </div>
+                        </div>
+                        <div class="form-group ">
+                            <div class="col-sm-offset-3 col-sm-9 ">
+                                <button type="button" class="btn btn-default btn-info" id="reg-button">注册</button>
+                            </div>
+                        </div>
+                    </form>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="/static/jquery-3.3.1.min.js"></script>
+<script src="/static/setupAjax.js"></script>
+<script>
+    $("#reg-button").click(function () {
+        let dataObj = new FormData();
+        dataObj.append("username", $("#id_username").val());
+        dataObj.append("password", $("#id_password").val());
+        dataObj.append("re_password", $("#id_re_password").val());
+        dataObj.append("phone", $("#id_phone").val());
+        dataObj.append("avatar", $("#id_avatar")[0].files[0]);
+        $.ajax({
+            url: "/register/",
+            type: "POST",
+            processData: false,
+            contentType: false,
+            data: dataObj,
+            success:function (data) {
+                if (data.code) {
+                    let errMsgObj = data.data;
+                    $.each(errMsgObj, function (k, v) {
+                        // k: 字段名 v: 报错信息数组
+                        $("#id_"+k).next(".help-block").text(v[0]).parent().parent().addClass("has-error");
+
+                    });
+                    } else {
+                        location.href = data.data || "/login/"
+                }
+            }
+        })
+    });
+    // 给所有的input 标签绑定focus 事件 移除错误提示信息
+    $("input.form-control").focus(function () {
+        $(this).next(".help-block").text("").parent().parent().removeClass("has-error");
+    });
+    // 头像预览
+    $("#id_avatar").change(function () {
+        let fileObj = this.files[0];
+       // 读取文件地址
+        let fileReader = new FileReader();
+        fileReader.readAsDataURL(fileObj);
+        // 等图片读取完在操作
+        fileReader.onload = function () {
+            // 设置预览图片
+            $("#show_avatar").attr("src", fileReader.result)
+        };
+    })
+</script>
+</body>
+</html>

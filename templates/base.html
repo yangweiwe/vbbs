@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ blog.title }}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="/static/bootstrap-3.3.7/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/media/themes/{{ blog.theme }}">
+    <link rel="stylesheet" href="/static/mybbs.css">
+</head>
+<body>
+<div class="header">
+    <p class="blog-title">{{ blog.title }}<a class="index-url" href="/index/">首页</a></p>
+</div>
+
+{#左侧页面开始#}
+<div class="container-fluid main">
+    <div class="row">
+        <div class="col-sm-3 affix">
+            {% load mytag %}
+            {% left_panel username %}
+        </div>
+    </div>
+    <div class="col-sm-9 pull-right">
+        {% block page-main %}
+
+        {% endblock page-main %}
+    </div>
+</div>
+<script src="/static/jquery-3.3.1.min.js"></script>
+<script src="/static/setupAjax.js"></script>
+{% block page-js %}
+
+
+{% endblock page-js %}
+</body>
+</html>

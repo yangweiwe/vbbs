@@ -1,0 +1,195 @@
+{% extends 'base.html' %}
+{% block page-main %}
+    <!-- 文章详情 开始 -->
+    <div class="col-md-9">
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <h2 class="article-title">{{ article.title }}</h2>
+                <div class="article-content">{{ article.articledetail.content|safe }}</div>
+            </div>
+            <!-- 点赞 开始 -->
+            <div id="div_digg">
+                <div class="diggit dig">
+                    <span class="diggnum" id="digg_count">{{ article.up_count }}</span>
+                </div>
+                <div class="buryit dig">
+                    <span class="burynum" id="bury_count">{{ article.down_count }}</span>
+                </div>
+                <div class="clearfix"></div>
+                <div class="diggword" id="digg_tips">
+
+                </div>
+                <p class="hide" id="is-login">请先<a
+                        href="/login/?next=/blog/{{ article.user.username }}/article/{{ article.nid }}/">登陆</a></p>
+            </div>
+            <!-- 点赞 结束 -->
+            <hr style="clear: both">
+        </div>
+        <!-- 评论 开始 -->
+        <div class="comment-list">
+            <h3>评论列表</h3>
+            <ul class="list-group">
+                {% for comment in comment_obj %}
+                    {# 判断当前的评论是否有父评论 #}
+                    {% if comment.parent_comment %}
+                        <li class="list-group-item" my-id="{{ comment.nid }}">
+                            <p class="small"><span>#{{ forloop.counter }}楼</span> <span>{{ comment.create_time }}</span>
+                                <a href="/blog/{{ comment.user.username }}/">{{ comment.user.username }}</a></p>
+                            <div>
+                                <p>@ <span>{{ comment.parent_comment.user.username }}</span></p>
+                                <p class="well">{{ comment.content }}</p>
+                            </div>
+                        </li>
+                    {% else %}
+                        <li class="list-group-item" my-id="{{ comment.nid }}">
+                            <p class="small"><span>#{{ forloop.counter }}楼</span> <span>{{ comment.create_time }}</span>
+                                <a href="/blog/{{ comment.user.username }}/">{{ comment.user.username }}</a> <span
+                                        class="pull-right replay">回复</span></p>
+                            <p>{{ comment.content }}</p>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+            </ul>
+        </div>
+        <!-- 评论 结束 -->
+
+        <!-- 添加评论 开始 -->
+        <h3>发表评论</h3>
+        <hr>
+        <div class="add-comment col-md-8">
+            <div class="panel panel-success">
+                <div class="panel-heading">
+                    <h3 class="panel-title">{{ request.user.username }}</h3>
+                </div>
+                <div class="panel-body">
+                    <p>评论内容</p>
+                    <textarea style="width: 100%" name="" id="comment" cols="30" rows="10"></textarea>
+                    <button class="btn btn-success pull-right" id="comment-btn"><span id="error-msg"></span>提交</button>
+                    <p id="prompt" class="hide">请先<a
+                            href="/login/?next=/blog/{{ article.user.username }}/article/{{ article.nid }}/"
+                            style="color: red">登录</a></p>
+
+                </div>
+            </div>
+        </div>
+        <!-- 添加评论 结束-->
+    </div>
+    <!-- 文章详情 结束 -->
+
+
+{% endblock %}
+<!-- 本页面独有的JS 开始 -->
+{% block page-js %}
+    <script>
+        //  点赞/反对
+        $("#div_digg").on('click', ".dig", function () {
+            // 判断点击标签有没有diggit样式 有的话就是点赞
+            let isUp = $(this).hasClass("diggit");
+            // 拿到文章id
+            let articleId = '{{ article.nid }}';
+            // 获取当前登陆的用户
+            let userID = '{{ request.user.nid }}';
+            if (!userID) {
+                // 如果用户没有登陆
+                $("#is-login").removeClass("hide")
+            } else {
+                // 登陆的用户开始点赞操作
+                $.ajax({
+                    url: '/updown/',
+                    type: 'POST',
+                    data: {
+                        article_id: articleId,
+                        is_up: isUp,
+                    },
+                    success: function (data) {
+                        console.log(data);
+                        if (data.code) {
+                            // 把提示信息展示在页面上
+                            $("#digg_tips").text(data.data);
+                        } else {
+                            if (isUp) {
+                                // 先更新数字
+                                // 点赞数+1
+                                let $upCount = $("#digg_count");
+                                $upCount.text(+$upCount.text() + 1)
+                            } else {
+                                let $downCount = $("#bury_count");
+                                $downCount.text(+$downCount.text() + 1)
+                            }
+                            // 显示提示信息
+                            $("#digg_tips").text(data.data);
+                        }
+                    }
+                })
+            }
+        });
+
+        // 评论
+        $("#comment-btn").click(function () {
+            var userId = "{{ request.user.nid }}";
+            var articleId = "{{ article.nid }}";
+
+            console.log(articleId);
+            var commentVal = $("#comment").val();
+            var pid = $(this).data("pid");
+            if (pid) {
+                // 对评论内容做切片
+                commentVal = commentVal.slice(commentVal.indexOf("\n") + 1)
+            }
+            {#console.log("pid",pid);#}
+            $(this).removeData("pid");
+            if (!userId) {
+                // 没有登录提示跳转到登录界面
+                $("#prompt").removeClass("hide")
+            } else {
+                // 向后端发送请求
+                $.ajax({
+                    url: "/comment/",
+                    type: "POST",
+                    data: {
+                        user_id: userId,
+                        article_id: articleId,
+                        comment: commentVal,
+                        pid: pid
+                    },
+                    success: function (res) {
+                        if (!res.code) {
+                            // 后端评论创建成功
+                            // 使用JS 代码将本次添加的内容追加到页面上
+                            // 1 创建HTML
+                            var floor = $(".comment-list li").length + 1;
+                            var time = (new Date()).toLocaleString();
+                            var name = "{{ request.user.username }}";
+                            var id = res.data;
+
+                            var htmlStr = `
+                             <li class="list-group-item" my-id=${id}>
+                                <p class="small"><span>#${floor}楼</span> <span>${time}</span>
+                                <a href="/blog/${name}/">${name}</a>
+                                <span class="pull-right replay">回复</span>
+                                </p>
+                                <p>${commentVal}</p>
+                             </li>
+                            `;
+                        }
+                        // 2 在页面上添加
+                        // 在comment-list 内部的ul 标签内部后面追加
+                        $(".comment-list ul").append(htmlStr);
+                        //  添加成功后清楚textarea
+                        $("#comment").val('');
+                    }
+                })
+            }
+        });
+        //  给每一楼的回复按钮绑定事件
+        // 1. 生成一个@用户名 添加到textarea里面
+        $(".comment-list").on("click", ".replay", function () {
+            var str = "@" + $(this).prev("a").text() + "\n";
+            $("#comment").focus().val(str);
+            // 在评论框下面的提交按钮记录一个标识，表明是子评论
+            var pid = $(this).parent().parent().attr("my-id");
+            $("#comment-btn").data("pid", pid)
+        })
+    </script>
+{% endblock %}
+<!-- 本页面独有的JS 结束 -->
